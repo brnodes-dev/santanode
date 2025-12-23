@@ -180,14 +180,14 @@
         "function allowance(address owner, address spender) public view returns (uint256)"
     ];
 
-    // Card Data (IPFS Links)
+    // Card Data (Now with STATIC PRICES for instant display)
     const rarities = [
-        { name: 'Common', id: 0, image: 'https://gateway.pinata.cloud/ipfs/bafybeigguaozw7yejcy3todm2bworaxsathi6fvdeqavx3nmv7ly5lkc5m' },
-        { name: 'Uncommon', id: 1, image: 'https://gateway.pinata.cloud/ipfs/bafybeig4cpdi7jb4lhql42dta4yac5lggxcrdbzxag3yg6hon7a7gwudua' },
-        { name: 'Rare', id: 2, image: 'https://gateway.pinata.cloud/ipfs/bafybeihtojj22cqiltvp4anm5hp5fn5rptimbqq3i3cdwh6aubcjs223ha' },
-        { name: 'Epic', id: 3, image: 'https://gateway.pinata.cloud/ipfs/bafybeiccloja4qw6bbq5uwezfppcgmc5deuij5jrolie4n2wpac6xw3hra' },
-        { name: 'Legendary', id: 4, image: 'https://gateway.pinata.cloud/ipfs/bafybeiefw5k3yno6f7djb2kg3wgmou33vihuatjo7cq3vk4g4pykmjuwju' },
-        { name: 'Mythic', id: 5, image: 'https://gateway.pinata.cloud/ipfs/bafybeib7hi6dcbmmbhwwu2v4oa22daqdfgifmhlnkauyl6elw2fq7l57pi' }
+        { name: 'Common', id: 0, price: 100, image: 'https://gateway.pinata.cloud/ipfs/bafybeigguaozw7yejcy3todm2bworaxsathi6fvdeqavx3nmv7ly5lkc5m' },
+        { name: 'Uncommon', id: 1, price: 500, image: 'https://gateway.pinata.cloud/ipfs/bafybeig4cpdi7jb4lhql42dta4yac5lggxcrdbzxag3yg6hon7a7gwudua' },
+        { name: 'Rare', id: 2, price: 1000, image: 'https://gateway.pinata.cloud/ipfs/bafybeihtojj22cqiltvp4anm5hp5fn5rptimbqq3i3cdwh6aubcjs223ha' },
+        { name: 'Epic', id: 3, price: 2500, image: 'https://gateway.pinata.cloud/ipfs/bafybeiccloja4qw6bbq5uwezfppcgmc5deuij5jrolie4n2wpac6xw3hra' },
+        { name: 'Legendary', id: 4, price: 5000, image: 'https://gateway.pinata.cloud/ipfs/bafybeiefw5k3yno6f7djb2kg3wgmou33vihuatjo7cq3vk4g4pykmjuwju' },
+        { name: 'Mythic', id: 5, price: 10000, image: 'https://gateway.pinata.cloud/ipfs/bafybeib7hi6dcbmmbhwwu2v4oa22daqdfgifmhlnkauyl6elw2fq7l57pi' }
     ];
 
     let provider, signer, nftContract, tokenContract;
@@ -203,13 +203,14 @@
             // Background from IPFS
             card.style.backgroundImage = `url('${r.image}')`;
             
+            // Note: Price is now displayed immediately from the array!
             card.innerHTML = `
                 <div class="card-content-top">
                     <h3>${r.name}</h3>
-                    <div class="supply-info">Loading...</div>
+                    <div class="supply-info">Connect to view supply</div>
                 </div>
                 <div class="card-content-bottom">
-                    <div class="price-info">--- $NODE</div>
+                    <div class="price-info">${r.price} $NODE</div>
                     <button onclick="mintReal(${i})" id="btn-${i}" disabled>Connect Wallet</button>
                 </div>`;
             grid.appendChild(card);
@@ -260,7 +261,7 @@
                 
                 const card = document.getElementById(`card-${i}`);
                 
-                // Update Visuals
+                // Update Supply (Price is already there, but we ensure it matches contract)
                 card.querySelector('.supply-info').innerText = `${minted} / ${max} minted`;
                 card.querySelector('.price-info').innerHTML = `${parseInt(price)} $NODE`;
                 
