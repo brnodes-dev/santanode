@@ -154,7 +154,7 @@
   <div class="grid" id="rarityGrid"></div>
   
   <p class="desc">💡 50% of every NFT purchase is permanently burned:<br>
-  <a href="https://etherscan.io/address/0x2080FeE444118AFCe30fCb749802C18c0a980dB7" target="_blank">0x2080FeE444118AFCe30fCb749802C18c0a980dB7</a></p>
+  <a href="https://etherscan.io/token/0x2f714d7b9a035d4ce24af8d9b6091c07e37f43fb?a=0x2080fee444118afce30fcb749802c18c0a980db7" target="_blank">0x2080FeE444118AFCe30fCb749802C18c0a980dB7</a></p>
   
   <div class="nft-result" id="result"></div>
 </div>
@@ -180,7 +180,7 @@
         "function allowance(address owner, address spender) public view returns (uint256)"
     ];
 
-    // Card Data (Now with STATIC PRICES for instant display)
+    // Card Data (Static Prices)
     const rarities = [
         { name: 'Common', id: 0, price: 100, image: 'https://gateway.pinata.cloud/ipfs/bafybeigguaozw7yejcy3todm2bworaxsathi6fvdeqavx3nmv7ly5lkc5m' },
         { name: 'Uncommon', id: 1, price: 500, image: 'https://gateway.pinata.cloud/ipfs/bafybeig4cpdi7jb4lhql42dta4yac5lggxcrdbzxag3yg6hon7a7gwudua' },
@@ -203,7 +203,6 @@
             // Background from IPFS
             card.style.backgroundImage = `url('${r.image}')`;
             
-            // Note: Price is now displayed immediately from the array!
             card.innerHTML = `
                 <div class="card-content-top">
                     <h3>${r.name}</h3>
@@ -309,15 +308,13 @@
             alert("Mint Successful! Merry Christmas! 🎅");
             updateContractData();
             
-            // --- CHANGE IS HERE ---
-            // The link now points to the user's collection on OpenSea, filtered by the contract
+            // Success Message Link also updated to point to user collection
             document.getElementById('result').innerHTML = `
                 <div style='margin:2rem auto;max-width:400px;border-radius:10px;padding:1rem;background:#fff;color:#000;border: 4px solid #ffd700;box-shadow: 0 0 20px #ffd700;'>
                     <h2>🎉 Congratulations!</h2>
                     <p>You successfully minted a <strong>${rarities[rarityId].name}</strong> NFT.</p>
                     <p><a href="https://opensea.io/${userAddress}?search[query]=${CONTRACT_ADDRESS}" target="_blank" style="color:#000;font-weight:bold;">View on OpenSea</a></p>
                 </div>`;
-            // ----------------------
             
             document.getElementById('result').scrollIntoView({behavior: "smooth"});
 
