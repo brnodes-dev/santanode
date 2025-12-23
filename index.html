@@ -309,12 +309,16 @@
             alert("Mint Successful! Merry Christmas! 🎅");
             updateContractData();
             
+            // --- CHANGE IS HERE ---
+            // The link now points to the user's collection on OpenSea, filtered by the contract
             document.getElementById('result').innerHTML = `
                 <div style='margin:2rem auto;max-width:400px;border-radius:10px;padding:1rem;background:#fff;color:#000;border: 4px solid #ffd700;box-shadow: 0 0 20px #ffd700;'>
                     <h2>🎉 Congratulations!</h2>
                     <p>You successfully minted a <strong>${rarities[rarityId].name}</strong> NFT.</p>
-                    <p><a href="https://opensea.io/assets/ethereum/${CONTRACT_ADDRESS}/${rarities[rarityId].id}" target="_blank" style="color:#000;font-weight:bold;">View on OpenSea</a></p>
+                    <p><a href="https://opensea.io/${userAddress}?search[query]=${CONTRACT_ADDRESS}" target="_blank" style="color:#000;font-weight:bold;">View on OpenSea</a></p>
                 </div>`;
+            // ----------------------
+            
             document.getElementById('result').scrollIntoView({behavior: "smooth"});
 
         } catch (error) {
