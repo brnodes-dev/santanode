@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SantaNode NFTs</title>
+<title>SantaNode NFTs - V2</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <style>
     body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:linear-gradient(180deg,#800000,#2a0000);color:#fff;text-align:center;min-height:100vh;overflow-x:hidden;}
@@ -24,7 +24,7 @@
         border-radius: 15px;
         padding: 1.5rem;
         color: #fff;
-        min-height: 380px; /* Altura boa para ver a arte */
+        min-height: 380px;
         display: flex;
         flex-direction: column;
         justify-content: space-between; 
@@ -49,41 +49,32 @@
         z-index: 1;
     }
 
-    /* Conteúdo da Carta (ficam acima da camada escura) */
-    .card-content-top, .card-content-bottom {
-        position: relative;
-        z-index: 2;
-    }
+    /* Conteúdo da Carta */
+    .card-content-top, .card-content-bottom { position: relative; z-index: 2; }
 
     .card h3 { 
         font-size: 1.8rem; 
         margin: 0 0 0.5rem 0; 
         letter-spacing: 1px; 
-        text-shadow: 0 2px 4px rgba(0,0,0,1);
+        text-shadow: 0 2px 4px rgba(0,0,0,1); 
     }
     
-    .supply-info {
+    .supply-info { 
         font-weight: bold; 
         font-size: 0.9em; 
-        opacity: 0.9;
-        text-shadow: 0 1px 3px rgba(0,0,0,1);
+        opacity: 0.9; 
+        text-shadow: 0 1px 3px rgba(0,0,0,1); 
     }
 
     .price-info { 
-        font-size: 1.4rem; 
+        font-size: 1.6rem; 
         font-weight: bold; 
         color: #ffd700; 
         margin: 1rem 0; 
-        text-shadow: 0 2px 4px rgba(0,0,0,1);
+        text-shadow: 0 2px 4px rgba(0,0,0,1); 
     }
     
-    .price-info small {
-        color: #fff;
-        font-weight: normal;
-        font-size: 0.7em;
-    }
-    
-    /* Botão de Mint dentro da carta */
+    /* Botão de Mint */
     .card button {
         background: #fff;
         color: #b30000;
@@ -103,7 +94,6 @@
     .card button:hover { background: #ffd700; color: #000; }
     .card button:disabled { background: #555; color: #888; cursor: not-allowed; }
 
-    /* Outros */
     footer{margin-top:3rem;font-size:0.8rem;color:#aaa;}
     .nft-result{margin-top:2rem;}
     .snowflake{position:fixed;top:-10px;color:white;font-size:1.2rem;pointer-events:none;animation:snowfall 10s linear infinite; z-index: 999;}
@@ -137,13 +127,11 @@
 
 <script>
     // --- CONFIGURAÇÃO ---
-    // Seu contrato implantado:
-    const CONTRACT_ADDRESS = "0x43B7074714dBbCc50c80238E0Aab849c33A6A075"; 
+    // NOVO CONTRATO V2
+    const CONTRACT_ADDRESS = "0xfC9e0007C0E445dbc831a1CF3fE88CFC9D326a27"; 
     
     // Contrato do Token $NODE
     const TOKEN_ADDRESS = "0x2F714d7b9A035d4ce24af8d9b6091c07E37f43Fb"; 
-    
-    const nodePriceUSD = 0.02281; // Preço base para display
 
     // --- ABIs ---
     const ABI_NFT = [
@@ -156,43 +144,18 @@
         "function allowance(address owner, address spender) public view returns (uint256)"
     ];
 
-    // Dados das cartas com os LINKS DO IPFS PARA AS IMAGENS
+    // Dados das cartas (Links IPFS mantidos)
     const rarities = [
-        {
-            name: 'Common', 
-            id: 0,
-            image: 'https://gateway.pinata.cloud/ipfs/bafybeigguaozw7yejcy3todm2bworaxsathi6fvdeqavx3nmv7ly5lkc5m'
-        },
-        {
-            name: 'Uncommon', 
-            id: 1,
-            image: 'https://gateway.pinata.cloud/ipfs/bafybeig4cpdi7jb4lhql42dta4yac5lggxcrdbzxag3yg6hon7a7gwudua'
-        },
-        {
-            name: 'Rare', 
-            id: 2,
-            image: 'https://gateway.pinata.cloud/ipfs/bafybeihtojj22cqiltvp4anm5hp5fn5rptimbqq3i3cdwh6aubcjs223ha'
-        },
-        {
-            name: 'Epic', 
-            id: 3,
-            image: 'https://gateway.pinata.cloud/ipfs/bafybeiccloja4qw6bbq5uwezfppcgmc5deuij5jrolie4n2wpac6xw3hra'
-        },
-        {
-            name: 'Legendary', 
-            id: 4,
-            image: 'https://gateway.pinata.cloud/ipfs/bafybeiefw5k3yno6f7djb2kg3wgmou33vihuatjo7cq3vk4g4pykmjuwju'
-        },
-        {
-            name: 'Mythic', 
-            id: 5,
-            image: 'https://gateway.pinata.cloud/ipfs/bafybeib7hi6dcbmmbhwwu2v4oa22daqdfgifmhlnkauyl6elw2fq7l57pi'
-        }
+        { name: 'Common', id: 0, image: 'https://gateway.pinata.cloud/ipfs/bafybeigguaozw7yejcy3todm2bworaxsathi6fvdeqavx3nmv7ly5lkc5m' },
+        { name: 'Uncommon', id: 1, image: 'https://gateway.pinata.cloud/ipfs/bafybeig4cpdi7jb4lhql42dta4yac5lggxcrdbzxag3yg6hon7a7gwudua' },
+        { name: 'Rare', id: 2, image: 'https://gateway.pinata.cloud/ipfs/bafybeihtojj22cqiltvp4anm5hp5fn5rptimbqq3i3cdwh6aubcjs223ha' },
+        { name: 'Epic', id: 3, image: 'https://gateway.pinata.cloud/ipfs/bafybeiccloja4qw6bbq5uwezfppcgmc5deuij5jrolie4n2wpac6xw3hra' },
+        { name: 'Legendary', id: 4, image: 'https://gateway.pinata.cloud/ipfs/bafybeiefw5k3yno6f7djb2kg3wgmou33vihuatjo7cq3vk4g4pykmjuwju' },
+        { name: 'Mythic', id: 5, image: 'https://gateway.pinata.cloud/ipfs/bafybeib7hi6dcbmmbhwwu2v4oa22daqdfgifmhlnkauyl6elw2fq7l57pi' }
     ];
 
     let provider, signer, nftContract, tokenContract;
 
-    // Inicializa o Grid Vazio com IMAGENS DE FUNDO
     function initLayout() {
         const grid = document.getElementById('rarityGrid');
         grid.innerHTML = ''; 
@@ -201,7 +164,7 @@
             card.className = 'card';
             card.id = `card-${i}`;
             
-            // Define a imagem do IPFS como fundo
+            // Fundo com a imagem do IPFS
             card.style.backgroundImage = `url('${r.image}')`;
             
             card.innerHTML = `
@@ -217,7 +180,6 @@
         });
     }
 
-    // Conectar Carteira
     document.getElementById('connectBtn').onclick = async () => {
         if (window.ethereum) {
             try {
@@ -231,9 +193,7 @@
                 nftContract = new ethers.Contract(CONTRACT_ADDRESS, ABI_NFT, signer);
                 tokenContract = new ethers.Contract(TOKEN_ADDRESS, ABI_TOKEN, signer);
 
-                // Ativa botões e carrega dados
                 updateContractData();
-                
             } catch (e) {
                 console.error(e);
                 alert("Connection failed: " + e.message);
@@ -243,22 +203,23 @@
         }
     };
 
-    // Ler dados do Blockchain
     async function updateContractData() {
         let totalBurned = 0;
         
         for (let i = 0; i < rarities.length; i++) {
             try {
                 const stats = await nftContract.getRarityStats(i); 
-                // stats[0]=price, stats[1]=max, stats[2]=minted
                 
+                // Formata valores vindos do Contrato V2
                 const price = ethers.formatEther(stats[0]);
                 const max = Number(stats[1]);
                 const minted = Number(stats[2]);
                 
                 const card = document.getElementById(`card-${i}`);
+                
+                // Atualiza visual
                 card.querySelector('.supply-info').innerText = `${minted} / ${max} minted`;
-                card.querySelector('.price-info').innerHTML = `${parseInt(price)} $NODE<br><small>≈ $${(price * nodePriceUSD).toFixed(2)}</small>`;
+                card.querySelector('.price-info').innerHTML = `${parseInt(price)} $NODE`;
                 
                 const btn = document.getElementById(`btn-${i}`);
                 if (minted >= max) {
@@ -270,7 +231,6 @@
                 }
                 
                 totalBurned += (minted * parseFloat(price) / 2);
-
             } catch (err) {
                 console.log("Error fetching rarity " + i, err);
             }
@@ -278,7 +238,6 @@
         document.querySelector('#burnedCounter strong').innerText = totalBurned.toLocaleString() + " $NODE";
     }
 
-    // Função Principal de Mint
     window.mintReal = async (rarityId) => {
         if (!nftContract) return;
 
@@ -286,11 +245,9 @@
         const originalText = btn.innerText;
         
         try {
-            // 1. Pegar Preço Atual
             const stats = await nftContract.getRarityStats(rarityId);
             const priceWei = stats[0];
 
-            // 2. Verificar Aprovação (Allowance)
             btn.innerText = "Checking...";
             const userAddress = await signer.getAddress();
             const allowance = await tokenContract.allowance(userAddress, CONTRACT_ADDRESS);
@@ -298,13 +255,12 @@
             if (allowance < priceWei) {
                 btn.innerText = "Approving...";
                 const txApprove = await tokenContract.approve(CONTRACT_ADDRESS, priceWei);
-                await txApprove.wait(); // Espera confirmação
+                await txApprove.wait(); 
             }
 
-            // 3. Executar Mint
             btn.innerText = "Minting...";
             const txMint = await nftContract.mintNFT(rarityId); 
-            await txMint.wait(); // Espera confirmação
+            await txMint.wait(); 
 
             alert("Mint Successful! Merry Christmas! 🎅");
             updateContractData();
@@ -336,11 +292,9 @@
         }
     };
 
-    // Efeito de neve
     function snow(){const s=document.createElement('div');s.className='snowflake';s.textContent='❄️';s.style.left=Math.random()*100+'vw';s.style.fontSize=Math.random()*12+10+'px';document.body.appendChild(s);setTimeout(()=>s.remove(),10000);}
     setInterval(snow,300);
     
-    // Inicia layout
     initLayout();
 </script>
 </body>
