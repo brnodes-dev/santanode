@@ -8,7 +8,7 @@
 <style>
     body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:linear-gradient(180deg,#800000,#2a0000);color:#fff;text-align:center;min-height:100vh;overflow-x:hidden;}
     
-    /* Banner de Aviso */
+    /* Network Warning Banner */
     .network-warning {
         background-color: #ffd700;
         color: #500000;
@@ -25,11 +25,11 @@
     
     #app{max-width:1100px;margin:2rem auto;padding:1rem;}
     
-    /* Botão Principal */
+    /* Main Button */
     #connectBtn { background: #ffd700; color: #500000; font-size: 1.2rem; padding: 0.8rem 2rem; border-radius: 50px; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
     #connectBtn:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(255, 215, 0, 0.8); }
 
-    /* Botão OpenSea (Minha Coleção) */
+    /* OpenSea Button (My Collection) */
     #openseaBtn {
         background: transparent;
         color: #ffd700;
@@ -39,17 +39,17 @@
         cursor: pointer;
         font-weight: bold;
         margin-top: 15px;
-        display: none; /* Começa invisível */
+        display: none; /* Starts hidden */
         transition: 0.3s;
         text-decoration: none;
         font-size: 0.9rem;
     }
     #openseaBtn:hover { background: rgba(255, 215, 0, 0.1); transform: translateY(-2px); }
 
-    /* Grid das Cartas */
+    /* Card Grid */
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem; padding: 1rem;}
     
-    /* Design da Carta com Imagem de Fundo */
+    /* Card Design with Background Image */
     .card{
         border-radius: 15px;
         padding: 1.5rem;
@@ -70,7 +70,7 @@
     
     .card:hover { transform: translateY(-10px); box-shadow: 0 15px 40px rgba(0,0,0,0.7); border-color: #ffd700; }
 
-    /* Camada escura para leitura do texto */
+    /* Dark overlay for text readability */
     .card::before {
         content: '';
         position: absolute;
@@ -79,7 +79,7 @@
         z-index: 1;
     }
 
-    /* Conteúdo da Carta */
+    /* Card Content */
     .card-content-top, .card-content-bottom { position: relative; z-index: 2; }
 
     .card h3 { 
@@ -104,7 +104,7 @@
         text-shadow: 0 2px 4px rgba(0,0,0,1); 
     }
     
-    /* Botão de Mint */
+    /* Mint Button */
     .card button {
         background: #fff;
         color: #b30000;
@@ -135,7 +135,7 @@
 <body>
 
 <div class="network-warning">
-    ⚠️ Atenção: Os NFTs são mintados apenas na rede <strong>Ethereum (Mainnet)</strong>. Certifique-se de estar na rede correta.
+    ⚠️ Warning: NFTs are minted only on the <strong>Ethereum (Mainnet)</strong> network. Please ensure you are on the correct network.
 </div>
 
 <header>
@@ -147,7 +147,7 @@
   <button id="connectBtn">Connect Wallet</button>
   <div id="address" style="margin-top:10px;color:#ffd700;"></div>
   
-  <a id="openseaBtn" target="_blank">⛵ Ver meus NFTs no OpenSea</a>
+  <a id="openseaBtn" target="_blank">⛵ View my NFTs on OpenSea</a>
   
   <p id="burnedCounter" style="font-size:1.2rem; margin: 20px 0;">🔥 Total $NODE Burned: <strong>Loading...</strong></p>
   
@@ -162,11 +162,11 @@
 <footer>Powered by NodeOps • Built with ❤️ using Ethereum & $NODE</footer>
 
 <script>
-    // --- CONFIGURAÇÃO ---
-    // CONTRATO V2 ATUALIZADO
+    // --- CONFIGURATION ---
+    // V2 CONTRACT ADDRESS
     const CONTRACT_ADDRESS = "0xfC9e0007C0E445dbc831a1CF3fE88CFC9D326a27"; 
     
-    // Contrato do Token $NODE
+    // $NODE Token Address
     const TOKEN_ADDRESS = "0x2F714d7b9A035d4ce24af8d9b6091c07E37f43Fb"; 
 
     // --- ABIs ---
@@ -180,7 +180,7 @@
         "function allowance(address owner, address spender) public view returns (uint256)"
     ];
 
-    // Dados das cartas (Links IPFS)
+    // Card Data (IPFS Links)
     const rarities = [
         { name: 'Common', id: 0, image: 'https://gateway.pinata.cloud/ipfs/bafybeigguaozw7yejcy3todm2bworaxsathi6fvdeqavx3nmv7ly5lkc5m' },
         { name: 'Uncommon', id: 1, image: 'https://gateway.pinata.cloud/ipfs/bafybeig4cpdi7jb4lhql42dta4yac5lggxcrdbzxag3yg6hon7a7gwudua' },
@@ -200,7 +200,7 @@
             card.className = 'card';
             card.id = `card-${i}`;
             
-            // Fundo com a imagem do IPFS
+            // Background from IPFS
             card.style.backgroundImage = `url('${r.image}')`;
             
             card.innerHTML = `
@@ -216,7 +216,7 @@
         });
     }
 
-    // Conectar Carteira
+    // Connect Wallet
     document.getElementById('connectBtn').onclick = async () => {
         if (window.ethereum) {
             try {
@@ -224,16 +224,16 @@
                 signer = await provider.getSigner();
                 const address = await signer.getAddress();
                 
-                // Atualiza UI
+                // Update UI
                 document.getElementById('address').innerText = `Connected: ${address.slice(0,6)}...${address.slice(-4)}`;
                 document.getElementById('connectBtn').style.display = 'none';
 
-                // Configura e mostra botão do OpenSea
+                // Setup and show OpenSea button
                 const osBtn = document.getElementById('openseaBtn');
                 osBtn.style.display = 'inline-block';
                 osBtn.href = `https://opensea.io/${address}?search[query]=${CONTRACT_ADDRESS}`;
 
-                // Inicia contratos
+                // Init Contracts
                 nftContract = new ethers.Contract(CONTRACT_ADDRESS, ABI_NFT, signer);
                 tokenContract = new ethers.Contract(TOKEN_ADDRESS, ABI_TOKEN, signer);
 
@@ -260,7 +260,7 @@
                 
                 const card = document.getElementById(`card-${i}`);
                 
-                // Atualiza visual
+                // Update Visuals
                 card.querySelector('.supply-info').innerText = `${minted} / ${max} minted`;
                 card.querySelector('.price-info').innerHTML = `${parseInt(price)} $NODE`;
                 
