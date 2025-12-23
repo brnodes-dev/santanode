@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SantaNode NFTs</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<style>
+    body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:linear-gradient(180deg,#b30000,#600000);color:#fff;text-align:center;min-height:100vh;overflow-x:hidden;}
+    header{padding:2rem 1rem;}
+    h1{font-size:2.5rem;margin:0;}
+    #app{max-width:1000px;margin:2rem auto;background:rgba(255,255,255,0.1);border-radius:10px;padding:2rem;box-shadow:0 0 10px rgba(0,0,0,0.4);}
+    button{background:#fff;color:#b30000;font-weight:bold;border:none;padding:0.6rem 1.2rem;border-radius:8px;cursor:pointer;transition:transform 0.2s; font-size: 1rem;}
+    button:hover{transform:scale(1.05);}
+    button:disabled{background:#ccc;color:#666;cursor:not-allowed;transform:none;}
+    #address{margin-top:1rem;font-size:0.9rem;color:#ffdfb3;}
+    #burnedCounter{margin:1rem 0;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;}
+    .card{border-radius:10px;padding:1rem;color:#000;min-height:260px;display:flex;flex-direction:column;justify-content:space-between; position: relative; overflow: hidden;}
+    .card h3{margin:0;font-size:1.1rem; z-index: 1;}
+    /* Cores das cartas */
+    .common{background:#eee;}
+    .uncommon{background:linear-gradient(135deg,#a8ffbf,#7bd389);}
+    .rare{background:linear-gradient(135deg,#8bc6ff,#3a7bd5);}
+    .epic{background:linear-gradient(135deg,#d88cff,#7f00ff);}
+    .legendary{background:linear-gradient(135deg,#fff79a,#ffb347);}
+    .mythic{background:linear-gradient(135deg,#ff6a6a,#b30000);color:#fff;}
+    
+    footer{margin-top:3rem;font-size:0.8rem;color:#ddd;}
+    .nft-result{margin-top:2rem;}
+    .snowflake{position:fixed;top:-10px;color:white;font-size:1rem;pointer-events:none;animation:snowfall 10s linear infinite;}
+    @keyframes snowfall{to{transform:translateY(110vh);opacity:0;}}
+    .desc{margin-top:1rem;font-size:0.9rem;color:#ffd;}
+    .desc a{color:#fff;text-decoration:underline;}
+    
+    .supply-info { font-weight: bold; margin-top: 5px; font-size: 0.9em; opacity: 0.8; }
+    .price-info { font-size: 1.1em; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>🎅 SantaNode NFTs</h1>
+    <p>Mint festive NFTs and burn $NODE to spread Christmas cheer!</p>
+</header>
+
+<div id="app">
+  <button id="connectBtn">Connect Wallet</button>
+  <div id="address"></div>
+  
+  <p id="burnedCounter">🔥 Total $NODE Burned: <strong>Loading...</strong></p>
+  
+  <div class="grid" id="rarityGrid"></div>
+  
+  <p class="desc">💡 50% of every NFT purchase is permanently burned:<br>
+  <a href="https://etherscan.io/address/0x2080FeE444118AFCe30fCb749802C18c0a980dB7" target="_blank">0x2080FeE444118AFCe30fCb749802C18c0a980dB7</a></p>
+  
+  <div class="nft-result" id="result"></div>
+</div>
+
+<footer>Powered by NodeOps • Built with ❤️ using Ethereum & $NODE</footer>
+
+<script>
+    // --- CONFIGURAÇÃO ---
+    // Seu contrato implantado:
+    const CONTRACT_ADDRESS = "0x43B7074714dBbCc50c80238E0Aab849c33A6A075"; 
+    
+    // Contrato do Token $NODE (Verifique se está na rede correta!)
+    const TOKEN_ADDRESS = "0x2F714d7b9A035d4ce24af8d9b6091c07E37f43Fb"; 
+    
+    const nodePriceUSD = 0.02281; // Preço base para display (pode variar)
+
+    // --- ABIs ---
+    const ABI_NFT = [
+        "function mintNFT(uint8 rarity) external",
+        "function getRarityStats(uint8 rarity) view returns (uint256 price, uint256 maxSupply, uint256 minted)"
+    ];
+
+    const ABI_TOKEN = [
+        "function approve(address spender, uint256 amount) public returns (bool)",
+        "function allowance(address owner, address spender) public view returns (uint256)"
+    ];
+
+    const rarities = [
+        {name:'Common', class:'common', id:0},
+        {name:'Uncommon', class:'uncommon', id:1},
+        {name:'Rare', class:'rare', id:2},
+        {name:'Epic', class:'epic', id:3},
+        {name:'Legendary', class:'legendary', id:4},
+        {name:'Mythic', class:'mythic', id:5}
+    ];
+
+    let provider, signer, nftContract, tokenContract;
+
+    // Inicializa o Grid Vazio
+    function initLayout() {
+        const grid = document.getElementById('rarityGrid');
+        grid.innerHTML = ''; 
+        rarities.forEach((r, i) => {
+            const card = document.createElement('div');
+            card.className = 'card ' + r.class;
+            card.id = `card-${i}`;
+            card.innerHTML = `
+                <h3>${r.name}</h3>
+                <div class="supply-info">Loading...</div>
+                <div class="price-info">--- $NODE</div>
+                <button onclick="mintReal(${i})" id="btn-${i}" disabled>Connect Wallet</button>`;
+            grid.appendChild(card);
+        });
+    }
+
+    // Conectar Carteira
+    document.getElementById('connectBtn').onclick = async () => {
+        if (window.ethereum) {
+            try {
+                provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner();
+                const address = await signer.getAddress();
+                
+                document.getElementById('address').innerText = `Connected: ${address.slice(0,6)}...${address.slice(-4)}`;
+                document.getElementById('connectBtn').style.display = 'none';
+
+                nftContract = new ethers.Contract(CONTRACT_ADDRESS, ABI_NFT, signer);
+                tokenContract = new ethers.Contract(TOKEN_ADDRESS, ABI_TOKEN, signer);
+
+                // Ativa botões e carrega dados
+                updateContractData();
+                
+            } catch (e) {
+                console.error(e);
+                alert("Connection failed: " + e.message);
+            }
+        } else {
+            alert("Please install MetaMask!");
+        }
+    };
+
+    // Ler dados do Blockchain
+    async function updateContractData() {
+        let totalBurned = 0;
+        
+        for (let i = 0; i < rarities.length; i++) {
+            try {
+                const stats = await nftContract.getRarityStats(i); 
+                // stats[0]=price, stats[1]=max, stats[2]=minted
+                
+                const price = ethers.formatEther(stats[0]);
+                const max = Number(stats[1]);
+                const minted = Number(stats[2]);
+                
+                const card = document.getElementById(`card-${i}`);
+                card.querySelector('.supply-info').innerText = `${minted} / ${max} minted`;
+                card.querySelector('.price-info').innerHTML = `<strong>${parseInt(price)} $NODE</strong><br><small>≈ $${(price * nodePriceUSD).toFixed(2)}</small>`;
+                
+                const btn = document.getElementById(`btn-${i}`);
+                if (minted >= max) {
+                    btn.innerText = "Sold Out";
+                    btn.disabled = true;
+                } else {
+                    btn.innerText = `Mint ${rarities[i].name}`;
+                    btn.disabled = false;
+                }
+                
+                // Calcula Burn (50% do valor mintado)
+                totalBurned += (minted * parseFloat(price) / 2);
+
+            } catch (err) {
+                console.log("Error fetching rarity " + i, err);
+            }
+        }
+        document.querySelector('#burnedCounter strong').innerText = totalBurned.toLocaleString() + " $NODE";
+    }
+
+    // Função Principal de Mint
+    window.mintReal = async (rarityId) => {
+        if (!nftContract) return;
+
+        const btn = document.getElementById(`btn-${rarityId}`);
+        const originalText = btn.innerText;
+        
+        try {
+            // 1. Pegar Preço Atual
+            const stats = await nftContract.getRarityStats(rarityId);
+            const priceWei = stats[0];
+
+            // 2. Verificar Aprovação (Allowance)
+            btn.innerText = "Checking...";
+            const userAddress = await signer.getAddress();
+            const allowance = await tokenContract.allowance(userAddress, CONTRACT_ADDRESS);
+
+            // Se a aprovação for menor que o preço, pede Approve
+            if (allowance < priceWei) {
+                btn.innerText = "Approving...";
+                const txApprove = await tokenContract.approve(CONTRACT_ADDRESS, priceWei);
+                await txApprove.wait(); // Espera confirmação
+            }
+
+            // 3. Executar Mint
+            btn.innerText = "Minting...";
+            const txMint = await nftContract.mintNFT(rarityId); 
+            await txMint.wait(); // Espera confirmação
+
+            // Sucesso!
+            alert("Mint Successful! Merry Christmas! 🎅");
+            updateContractData();
+            
+            // Mostra resultado visual
+            document.getElementById('result').innerHTML = `
+                <div style='margin:2rem auto;max-width:400px;border-radius:10px;padding:1rem;background:#fff;color:#000;border: 4px solid #ffd700;box-shadow: 0 0 20px #ffd700;'>
+                    <h2>🎉 Congratulations!</h2>
+                    <p>You successfully minted a <strong>${rarities[rarityId].name}</strong> NFT.</p>
+                    <p><small>Check your wallet or OpenSea/Explorer to see it!</small></p>
+                </div>`;
+            
+            // Scroll até o resultado
+            document.getElementById('result').scrollIntoView({behavior: "smooth"});
+
+        } catch (error) {
+            console.error(error);
+            let msg = error.reason || error.message || "Unknown error";
+            
+            if(msg.includes("Sold out")) msg = "Sold Out!";
+            if(msg.includes("insufficient allowance")) msg = "Please approve the token transaction.";
+            if(msg.includes("user rejected")) msg = "Transaction cancelled by user.";
+            
+            alert("Error: " + msg);
+        } finally {
+            // Restaura o botão se não estiver esgotado
+            const currentStats = await nftContract.getRarityStats(rarityId).catch(()=>[0,0,1000]); 
+            if (Number(currentStats[2]) < Number(currentStats[1])) {
+                btn.innerText = `Mint ${rarities[rarityId].name}`;
+                btn.disabled = false;
+            } else {
+                btn.innerText = "Sold Out";
+                btn.disabled = true;
+            }
+        }
+    };
+
+    // Efeito de neve
+    function snow(){const s=document.createElement('div');s.className='snowflake';s.textContent='❄️';s.style.left=Math.random()*100+'vw';s.style.fontSize=Math.random()*12+10+'px';document.body.appendChild(s);setTimeout(()=>s.remove(),10000);}
+    setInterval(snow,300);
+    
+    // Inicia layout
+    initLayout();
+</script>
+</body>
+</html>
+
+
+
